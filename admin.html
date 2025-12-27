@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - AI学习导航站</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+</head>
+<body>
+  <header>
+    <nav class="container">
+      <a href="index.html" class="logo">AI学习导航站</a>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="page-header">
+      <h1>管理后台</h1>
+      <p>管理分类、资源和查看统计数据</p>
+    </div>
+
+    <!-- Stats Section -->
+    <div id="stats-container">
+      <div class="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="margin: 2rem 0; border-bottom: 2px solid var(--border-color);">
+      <button class="btn btn-outline" id="tabResources" onclick="showTab('resources')" style="border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;">资源管理</button>
+      <button class="btn btn-outline" id="tabCategories" onclick="showTab('categories')" style="border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;">分类管理</button>
+    </div>
+
+    <!-- Resources Tab -->
+    <div id="resourcesTab">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2>资源管理</h2>
+        <button class="btn btn-primary" onclick="openResourceModal()">添加资源</button>
+      </div>
+      <div id="resources-list-container">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories Tab -->
+    <div id="categoriesTab" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2>分类管理</h2>
+        <button class="btn btn-primary" onclick="openCategoryModal()">添加分类</button>
+      </div>
+      <div id="categories-list-container">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Resource Modal -->
+  <div class="modal" id="resourceModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="resourceModalTitle">添加资源</h2>
+        <button class="modal-close" onclick="closeResourceModal()">&times;</button>
+      </div>
+      <form id="resourceForm">
+        <input type="hidden" id="resourceId">
+        <div class="form-group">
+          <label for="resourceCategory">分类</label>
+          <select id="resourceCategory" required>
+            <option value="">请选择分类</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="resourceType">类型</label>
+          <select id="resourceType" required>
+            <option value="">请选择类型</option>
+            <option value="guide">指南</option>
+            <option value="blogger">博主</option>
+            <option value="case">案例</option>
+            <option value="tool">工具</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="resourceTitle">标题 *</label>
+          <input type="text" id="resourceTitle" required>
+        </div>
+        <div class="form-group">
+          <label for="resourceDescription">描述</label>
+          <textarea id="resourceDescription"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="resourceUrl">URL</label>
+          <input type="url" id="resourceUrl">
+        </div>
+        <div class="form-group">
+          <label for="resourceImageUrl">图片URL</label>
+          <input type="url" id="resourceImageUrl">
+        </div>
+        <div class="form-group">
+          <label for="resourceAuthor">作者</label>
+          <input type="text" id="resourceAuthor">
+        </div>
+        <div class="form-group">
+          <label for="resourceTags">标签（用逗号分隔）</label>
+          <input type="text" id="resourceTags">
+        </div>
+        <div style="display: flex; gap: 1rem;">
+          <button type="submit" class="btn btn-primary">保存</button>
+          <button type="button" class="btn btn-secondary" onclick="closeResourceModal()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal" id="categoryModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="categoryModalTitle">添加分类</h2>
+        <button class="modal-close" onclick="closeCategoryModal()">&times;</button>
+      </div>
+      <form id="categoryForm">
+        <input type="hidden" id="categoryId">
+        <div class="form-group">
+          <label for="categoryName">名称 *</label>
+          <input type="text" id="categoryName" required>
+        </div>
+        <div class="form-group">
+          <label for="categoryDescription">描述</label>
+          <textarea id="categoryDescription"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="categoryIcon">图标（Emoji）</label>
+          <input type="text" id="categoryIcon" placeholder="例如: 📚">
+        </div>
+        <div class="form-group">
+          <label for="categorySortOrder">排序</label>
+          <input type="number" id="categorySortOrder" value="0">
+        </div>
+        <div style="display: flex; gap: 1rem;">
+          <button type="submit" class="btn btn-primary">保存</button>
+          <button type="button" class="btn btn-secondary" onclick="closeCategoryModal()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 AI学习导航站. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>

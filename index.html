@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI工具导航站</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+</head>
+<body>
+  <header>
+    <nav class="container">
+      <a href="index.html" class="logo">AI工具导航站</a>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+        <li><button class="btn btn-outline" id="settingsBtn">设置</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="page-header text-center">
+      <h1>AI工具分类导航</h1>
+      <p>精选AI工具和学习资源，按功能分类整理</p>
+    </div>
+
+    <div id="categories-container" class="card-grid">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>加载中...</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 AI工具导航站. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- 配置面板 Modal -->
+  <div class="modal" id="configModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2>API配置</h2>
+        <button class="modal-close" id="closeConfig">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="configForm">
+          <div class="form-group">
+            <label for="apiUrl">API地址</label>
+            <input type="text" id="apiUrl" placeholder="https://open.bigmodel.cn/api/paas/v4/chat/completions" required>
+          </div>
+          <div class="form-group">
+            <label for="apiKey">API密钥</label>
+            <input type="password" id="apiKey" placeholder="请输入您的API密钥" required>
+          </div>
+          <div class="form-group">
+            <label for="modelName">模型名称</label>
+            <input type="text" id="modelName" placeholder="glm-4" value="glm-4" required>
+          </div>
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">保存配置</button>
+            <button type="button" class="btn btn-secondary" id="cancelConfig">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI 聊天界面 -->
+  <div class="chat-widget" id="chatWidget" style="display: none;">
+    <button class="chat-button" id="chatToggle">💬</button>
+    <div class="chat-window" id="chatWindow">
+      <div class="chat-header">
+        <h3>AI助手</h3>
+        <button class="chat-close" id="chatClose">&times;</button>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="输入您的问题...">
+        <button id="chatSend">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/chat.js"></script>
+</body>
+</html>

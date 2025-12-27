@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资源详情 - AI学习导航站</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+</head>
+<body>
+  <header>
+    <nav class="container">
+      <a href="index.html" class="logo">AI学习导航站</a>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div id="resource-detail-container">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>加载中...</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 AI学习导航站. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- AI Chat Widget -->
+  <div class="chat-widget">
+    <button class="chat-button" id="chatToggle">💬</button>
+    <div class="chat-window" id="chatWindow">
+      <div class="chat-header">
+        <h3>AI学习助手</h3>
+        <button class="chat-close" id="chatClose">&times;</button>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="输入您的问题...">
+        <button id="chatSend">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/zhipu-chat.js"></script>
+  <script>
+    let currentResource = null;
+    let isFavorited = false;
+
+    async function loadResourceDetail() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const resourceId = urlParams.get('id');
+      const container = document.getElementById('resource-detail-container');
+
+      if (!resourceId) {
+        container.innerHTML = '<div class="alert alert-error">资源ID无效</div>';
+        return;
+      }
+
+      try {
+        const resource = await window.api.resources.getById(resourceId);
+        currentResource = resource;
+
+        // Check if favorited
+        const user = await window.auth.checkAuth();
+        if (user) {
+          try {
+            const favorites = await window.api.favorites.getAll();
+            isFavorited = favorites.some(fav => fav.id === resource.id);
+          } catch (error) {
+            console.error('Failed to check favorites:', error);
+          }
+        }
+
+        container.innerHTML = `
+          <div class="card" style="max-width: 900px; margin: 2rem auto;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+              <span class="type-badge ${resource.type}">${window.main.getTypeName(resource.type)}</span>
+              ${user ? `
+                <button class="favorite-btn ${isFavorited ? 'active' : ''}" id="favoriteBtn">
+                  ${isFavorited ? '❤️' : '🤍'}
+                </button>
+              ` : ''}
+            </div>
+            ${resource.image_url ? `<img src="${resource.image_url}" alt="${resource.title}" style="width: 100%; height: 400px; object-fit: cover; border-radius: 0.5rem; margin-bottom: 1.5rem;" onerror="this.style.display='none'">` : ''}
+            <h1 style="font-size: 2rem; margin-bottom: 1rem;">${resource.title}</h1>
+            <div style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+              <p><strong>作者:</strong> ${resource.author || '未知'}</p>
+              <p><strong>浏览:</strong> ${resource.view_count || 0} 次</p>
+            </div>
+            ${resource.tags ? `
+              <div class="tags" style="margin-bottom: 1.5rem;">
+                ${resource.tags.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('')}
+              </div>
+            ` : ''}
+            <div style="margin-bottom: 1.5rem; line-height: 1.8;">
+              <h2 style="margin-bottom: 0.5rem;">描述</h2>
+              <p style="white-space: pre-wrap;">${resource.description || '暂无描述'}</p>
+            </div>
+            ${resource.url ? `
+              <a href="${resource.url}" target="_blank" class="btn btn-primary" style="display: inline-block;">
+                访问资源 →
+              </a>
+            ` : ''}
+          </div>
+        `;
+
+        // Add favorite button handler
+        if (user) {
+          const favoriteBtn = document.getElementById('favoriteBtn');
+          favoriteBtn.addEventListener('click', toggleFavorite);
+        }
+      } catch (error) {
+        container.innerHTML = `
+          <div class="alert alert-error">
+            加载资源失败: ${error.message}
+          </div>
+        `;
+      }
+    }
+
+    async function toggleFavorite() {
+      const user = await window.auth.checkAuth();
+      if (!user) {
+        alert('请先登录');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const favoriteBtn = document.getElementById('favoriteBtn');
+      favoriteBtn.disabled = true;
+
+      try {
+        if (isFavorited) {
+          await window.api.favorites.remove(currentResource.id);
+          isFavorited = false;
+          favoriteBtn.textContent = '🤍';
+          favoriteBtn.classList.remove('active');
+        } else {
+          await window.api.favorites.add(currentResource.id);
+          isFavorited = true;
+          favoriteBtn.textContent = '❤️';
+          favoriteBtn.classList.add('active');
+        }
+      } catch (error) {
+        alert('操作失败: ' + error.message);
+      } finally {
+        favoriteBtn.disabled = false;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadResourceDetail);
+  </script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

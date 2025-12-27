@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>注册 - AI学习导航站</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+</head>
+<body>
+  <header>
+    <nav class="container">
+      <a href="index.html" class="logo">AI学习导航站</a>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container" style="max-width: 500px; margin: 4rem auto;">
+    <div class="card">
+      <div class="page-header">
+        <h1>注册</h1>
+        <p>创建新账户开始您的AI学习之旅</p>
+      </div>
+
+      <div id="alert-container"></div>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="username">用户名</label>
+          <input type="text" id="username" name="username" required minlength="3">
+        </div>
+
+        <div class="form-group">
+          <label for="email">邮箱</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">密码</label>
+          <input type="password" id="password" name="password" required minlength="6">
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">确认密码</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">注册</button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem;">
+        <p>已有账户？ <a href="login.html">立即登录</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 AI学习导航站. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const alertContainer = document.getElementById('alert-container');
+      const username = document.getElementById('username').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+
+      alertContainer.innerHTML = '';
+
+      if (password !== confirmPassword) {
+        alertContainer.innerHTML = `
+          <div class="alert alert-error">
+            两次输入的密码不一致
+          </div>
+        `;
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '注册中...';
+
+      try {
+        const result = await window.api.auth.register(username, email, password);
+        window.api.setToken(result.token);
+        window.auth.setCurrentUser(result.user);
+        
+        alertContainer.innerHTML = `
+          <div class="alert alert-success">
+            注册成功！正在跳转...
+          </div>
+        `;
+        
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1000);
+      } catch (error) {
+        alertContainer.innerHTML = `
+          <div class="alert alert-error">
+            ${error.message}
+          </div>
+        `;
+        submitBtn.disabled = false;
+        submitBtn.textContent = '注册';
+      }
+    });
+  </script>
+</body>
+</html>

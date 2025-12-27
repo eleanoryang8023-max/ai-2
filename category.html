@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分类详情 - AI工具导航站</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+</head>
+<body>
+  <header>
+    <nav class="container">
+      <a href="index.html" class="logo">AI工具导航站</a>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+        <li><button class="btn btn-outline" id="settingsBtn">设置</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="page-header">
+      <h1 id="category-title">分类资源</h1>
+      <p id="category-description"></p>
+    </div>
+
+    <!-- 资源类型筛选 -->
+    <div class="search-bar">
+      <select id="typeFilter" style="padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 0.5rem;">
+        <option value="">所有类型</option>
+        <option value="guide">学习指南</option>
+        <option value="blogger">推荐博主</option>
+        <option value="case">精彩案例</option>
+        <option value="tool">工具推荐</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="搜索资源...">
+      <button class="btn btn-primary" id="searchBtn">搜索</button>
+    </div>
+
+    <div id="resources-container" class="card-grid">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>加载中...</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 AI工具导航站. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- 配置面板 Modal -->
+  <div class="modal" id="configModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2>API配置</h2>
+        <button class="modal-close" id="closeConfig">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="configForm">
+          <div class="form-group">
+            <label for="apiUrl">API地址</label>
+            <input type="text" id="apiUrl" placeholder="https://open.bigmodel.cn/api/paas/v4/chat/completions" required>
+          </div>
+          <div class="form-group">
+            <label for="apiKey">API密钥</label>
+            <input type="password" id="apiKey" placeholder="请输入您的API密钥" required>
+          </div>
+          <div class="form-group">
+            <label for="modelName">模型名称</label>
+            <input type="text" id="modelName" placeholder="glm-4" value="glm-4" required>
+          </div>
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">保存配置</button>
+            <button type="button" class="btn btn-secondary" id="cancelConfig">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI 聊天界面 -->
+  <div class="chat-widget" id="chatWidget" style="display: none;">
+    <button class="chat-button" id="chatToggle">💬</button>
+    <div class="chat-window" id="chatWindow">
+      <div class="chat-header">
+        <h3>AI助手</h3>
+        <button class="chat-close" id="chatClose">&times;</button>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="输入您的问题...">
+        <button id="chatSend">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/chat.js"></script>
+  <script>
+    // 加载分类和资源
+    async function loadCategoryAndResources() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const categoryId = urlParams.get('id');
+      
+      const categoryTitle = document.getElementById('category-title');
+      const categoryDescription = document.getElementById('category-description');
+      const container = document.getElementById('resources-container');
+
+      if (!categoryId) {
+        container.innerHTML = '<div class="alert alert-error">分类ID无效</div>';
+        return;
+      }
+
+      try {
+        // 加载分类信息
+        const category = await window.api.categories.getById(categoryId);
+        if (categoryTitle) categoryTitle.textContent = category.name;
+        if (categoryDescription) categoryDescription.textContent = category.description || '';
+
+        // 加载资源
+        await loadResources(categoryId);
+      } catch (error) {
+        container.innerHTML = `<div class="alert alert-error">加载失败: ${error.message}</div>`;
+      }
+    }
+
+    async function loadResources(categoryId, type = '') {
+      const container = document.getElementById('resources-container');
+      
+      try {
+        const filters = {
+          category_id: categoryId
+        };
+        if (type) filters.type = type;
+        
+        const resources = await window.api.resources.getAll(filters);
+
+        if (resources.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📝</div>
+              <h3>暂无资源</h3>
+              <p>该分类下还没有学习资源</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = resources.map(resource => `
+          <div class="card resource-card" onclick="window.location.href='resource-detail.html?id=${resource.id}'">
+            ${resource.image_url ? `<img src="${resource.image_url}" alt="${resource.title}" class="resource-image" onerror="this.style.display='none'">` : ''}
+            <span class="resource-type type-badge ${resource.type}">${getTypeName(resource.type)}</span>
+            <h3>${resource.title}</h3>
+            <p class="description">${resource.description || ''}</p>
+            ${resource.tags ? `
+              <div class="tags">
+                ${resource.tags.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('')}
+              </div>
+            ` : ''}
+            <div class="footer">
+              <span class="text-secondary">${resource.author || '未知作者'}</span>
+              <span class="text-secondary">👁 ${resource.view_count || 0}</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        container.innerHTML = `<div class="alert alert-error">加载资源失败: ${error.message}</div>`;
+      }
+    }
+
+    function getTypeName(type) {
+      const typeMap = {
+        'guide': '学习指南',
+        'blogger': '推荐博主',
+        'case': '精彩案例',
+        'tool': '工具推荐'
+      };
+      return typeMap[type] || type;
+    }
+
+    // 筛选功能
+    document.getElementById('typeFilter').addEventListener('change', (e) => {
+      const categoryId = new URLSearchParams(window.location.search).get('id');
+      loadResources(categoryId, e.target.value);
+    });
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      // 搜索功能可以后续实现
+      alert('搜索功能开发中...');
+    });
+
+    document.addEventListener('DOMContentLoaded', loadCategoryAndResources);
+  </script>
+</body>
+</html>
